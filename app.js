@@ -1,11 +1,13 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
+const ui = document.getElementById('interface');
 
 class Tile {
     constructor () {
-        this.surface = Math.random() > 0.5 ? 'sand' : 'snow';
+        this.surface = Math.random() > 0.6 ? 'sand' : 'snow';
         this.building = null;
         this.party = null;
+        this.cost = this.surface === 'sand' ? 100 : 1;
     };
 }
 
@@ -14,6 +16,7 @@ class Map {
         this.width = width;
         this.height = height;
         this.tiles = new Array(width).fill(null).map(()=>new Array(height).fill(null).map(()=>new Tile));
+        this.moveInterval = null;
     };
     getPath (prevX, prevY, targetX, targetY) {
         let points = [];
@@ -40,36 +43,199 @@ class Map {
             points.push ({x, y, cost});
         } while (x !== targetX || y !== targetY);
         game.draw()
-        // return points.reduce((a,b)=>{return a.cost !== undefined ? a.cost + b.cost : a + b.cost});
         return points;
     }
     moveParty (party, path) {
-        let nextStep = path[0];
-        this.stop = false;
-        let i = 0;
-        console.log('this', this);
-        canvas.removeEventListener('click', this.gameMapClickHandle);
-        canvas.addEventListener('click', this.gameMapClickWhileMovingHandle);
-
-        const moveInterval = setInterval(()=>{
-            nextStep = path[i];
-            if (typeof nextStep === 'undefined' || party.currentMovePoints > nextStep.cost || this.stop === true) {
-                clearInterval(moveInterval);
-                this.stop = false;
-                canvas.removeEventListener('click', this.gameMapClickWhileMovingHandle, true);
-                canvas.addEventListener('click', this.gameMapClickHandle);
+        this.moveInterval = setInterval(()=>{
+            if (path.length > 0 && party.movePoints >= path[0].cost) {
+                this.tiles[party.x][party.y].party = null;
+                party.x = path[0].x;
+                party.y = path[0].y;
+                this.tiles[party.x][party.y].party = party;
+                party.movePoints -= path[0].cost;
+                path.shift();
+                console.log(party.movePoints);
+                game.draw();
                 return;
+            } else {
+                console.log('clearing this shit');
+                clearInterval(this.moveInterval);
+                this.moveInterval = null;
             }
-            this.tiles[party.x][party.y].party = null;
-            party.x = nextStep.x;
-            party.y = nextStep.y;
-            this.tiles[party.x][party.y].party = party;
-            party.movePoints -= nextStep.cost;
-            i++;
-            nextStep = path[i];
             game.draw();
         }, 150);
     }
+
+    getGraph (startX, startY, finishX, finishY) {
+        console.log(this);
+        const graph = {};
+        for (let x = 0; x < this.width; x++) {
+            for (let y = 0; y < this.height; y++) {
+                let xModifier;
+                let yModifier;
+                let propertyName;
+                let node = {};
+                //All map tiles
+                //North
+                if (y > 0) {
+                    xModifier = 0;
+                    yModifier = -1;
+                    propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
+                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].cost;
+                }
+                //North east
+                if (y > 0 && x < this.width - 1) {
+                    xModifier = 1;
+                    yModifier = -1;
+                    propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
+                    node[propertyName] = parseFloat(Math.sqrt(2 * Math.pow(this.tiles[x + xModifier][y + yModifier].cost, 2)).toFixed(3));
+                }
+                //East
+                if (x < this.width - 1) {
+                    xModifier = 1;
+                    yModifier = 0;
+                    propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
+                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].cost;
+                }
+                //South east
+                if (y < this.height - 1 && x < this.width - 1) {
+                    xModifier = 1;
+                    yModifier = 1;
+                    propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
+                    node[propertyName] = parseFloat(Math.sqrt(2 * Math.pow(this.tiles[x + xModifier][y + yModifier].cost, 2)).toFixed(3));
+                }
+                //South
+                if (y < this.height - 1) {
+                    xModifier = 0;
+                    yModifier = 1;
+                    propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
+                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].cost
+                }
+                //South west
+                if (y < this.height - 1 && x > 0) {
+                    xModifier = -1;
+                    yModifier = 1;
+                    propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
+                    node[propertyName] = parseFloat(Math.sqrt(2 * Math.pow(this.tiles[x + xModifier][y + yModifier].cost, 2)).toFixed(3));
+                }
+                //West
+                if (x > 0) {
+                    xModifier = -1;
+                    yModifier = 0;
+                    propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
+                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].cost
+                }
+                //North west
+                if (x > 0 && y > 0) {
+                    xModifier = -1;
+                    yModifier = -1;
+                    propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
+                    node[propertyName] = parseFloat(Math.sqrt(2 * Math.pow(this.tiles[x + xModifier][y + yModifier].cost, 2)).toFixed(3));
+                }
+                graph[x + '/' + y] = node;
+            }
+        }
+        graph['start'] = graph[startX + '/' + startY];
+        delete graph[startX + '/' + startY];
+        graph['finish'] = graph[finishX + '/' + finishY];
+        graph['finish'].x = finishX;
+        graph['finish'].y = finishY;
+        delete graph[finishX + '/' + finishY];
+        return graph;
+    }
+    lowestCostNode (costs, processed) {
+          return Object.keys(costs).reduce((lowest, node) => {
+
+            if (lowest === null || costs[node] < costs[lowest]) {
+              if (!processed.includes(node)) {
+                lowest = node;
+              }
+            }
+            // console.log('lowest', costs[lowest]);
+            return lowest;
+          }, null);
+    };
+    // function that returns the minimum cost and path to reach Finish
+    /* TODO Ostatni element drogi, nie ma jak zdobyć jego koordynatów*/
+  dijkstra (graph) {
+      const startTime = new Date();
+  // track lowest cost to reach each node
+  const costs = Object.assign({finish: Infinity}, graph.start);
+  // track paths
+  const parents = {finish: null};
+  for (let child in graph.start) {
+    parents[child] = 'start';
+  }
+
+  // track nodes that have already been processed
+  const processed = [];
+
+  let node = this.lowestCostNode(costs, processed);
+
+  while (node) {
+    let cost = costs[node];
+    // console.log('costs[node]', costs[node]);
+    let children = graph[node];
+    for (let n in children) {
+        let newCost = cost + children[n];
+        // console.log('costs[n] b', costs[n]);
+        if (!costs[n]) {
+          costs[n] = newCost;
+          parents[n] = node;
+        }
+        if (costs[n] > newCost) {
+          costs[n] = newCost;
+          parents[n] = node;
+        }
+        // console.log('costs[n] a', costs[n]);
+    }
+    processed.push(node);
+    node = this.lowestCostNode(costs, processed);
+    // console.log('node', node);
+  }
+
+  let optimalPath = ['finish'];
+  let parent = parents.finish;
+  while (parent) {
+
+      // console.log('parent', parent);
+      optimalPath.push(parent);
+      parent = parents[parent];
+  }
+  optimalPath.reverse();
+  const pathStart = optimalPath[0];
+  // optimalPath.shift();
+  game.currentParty.path = optimalPath.map((step, index, array)=>{
+      let x;
+      let y;
+      if (step !== 'finish') {
+          x = parseInt(step.split('/')[0]);
+          y = parseInt(step.split('/')[1]);
+      }
+      else {
+          x = graph.finish.x;
+          y = graph.finish.y;
+      }
+
+      // do poprawy
+      if (index === 0) {
+          return {};
+      }
+          return {x: x,
+                  y: y,
+                  cost: graph[array[index-1]][array[index]]};
+  });
+  game.currentParty.path.shift();
+  console.log(game.currentParty.path);
+  game.draw();
+  const results = {
+    distance: costs.finish,
+    path: optimalPath
+  };
+  console.log(`Calculating path took: ${(new Date() - startTime) / 1000} seconds, for ${Object.keys(graph).length} nodes`);
+  return game.currentParty.path;
+};
+
 
 }
 
@@ -87,6 +253,48 @@ class Player {
         this.parties = [];
         this.towns = [];
         this.buildings = [];
+        this.id = settings.id;
+    }
+    addParty (settings) {
+        this.parties.push(new Party(settings))
+        this.parties[this.parties.length-1].player = this.id;
+    }
+    startNewTurn () {
+        this.parties.forEach((party)=>{
+            party.movePoints = party.maxMovePoints;
+            game.interface.endTurnButton.style.backgroundColor = this.color;
+        });
+        let tilesX = Math.floor(game.gameWidth / game.tileSide);
+        let tilesY = Math.floor(game.gameHeight / game.tileSide);
+        //Do poprawy
+
+        if (game.currentParty.x - Math.floor(tilesX * 0.5) >= 0 && game.currentParty.x + Math.floor(tilesX * 0.5) < game.map.width) {
+            console.log('if x');
+            game.camera.x = game.currentParty.x - tilesX*0.5 + 1;
+        }
+        else if (game.currentParty.x - Math.floor(tilesX * 0.5) <= 0) {
+            game.camera.x = 0;
+            console.log('else x');
+        }
+        else if (game.currentParty.x - Math.floor(tilesX * 0.5) >= game.map.width - tilesX) {
+            console.log('drugi else x');
+            game.camera.x = game.map.width - tilesX;
+        }
+        console.log('x: $s', game.camera.x);
+
+        if (game.currentParty.y - Math.floor(tilesY * 0.5) >= 0 && game.currentParty.y + Math.floor(tilesY * 0.5) < game.map.height) {
+            console.log('if y');
+            game.camera.y = game.currentParty.y - Math.floor(tilesY * 0.5) + 1;
+        }
+        else if (game.currentParty.y - Math.floor(tilesY * 0.5) <= 0) {
+            game.camera.y = 0;
+            console.log('else y');
+        }
+        else if (game.currentParty.y - Math.floor(tilesY * 0.5) >= tilesY) {
+            console.log('drugi else y');
+            game.camera.y = game.map.height - tilesY;
+        }
+        console.log('y: $s', game.camera.y);
     }
 }
 
@@ -95,9 +303,51 @@ class Party {
         this.name = settings.name;
         this.x = settings.x;
         this.y = settings.y;
-        this.path = null;
+        this.path = [];
         this.maxMovePoints = settings.maxMovePoints;
         this.movePoints = this.maxMovePoints;
+        this.player;
+    }
+}
+
+class Interface {
+    constructor(settings){
+        this.width = settings.width;
+        this.height = settings.height;
+        this.canvas = settings.canvas
+    }
+    attachMapInterface () {
+        if (typeof this.height !== 'number') {
+            this.height = this.canvas.height;
+        }
+        this.userInterface = document.createElement('div');
+        this.userInterface.id = 'map_interface';
+        this.endTurnButton = document.createElement('button');
+        this.endTurnButton.id = 'end_turn_button';
+        this.userInterface.appendChild(this.endTurnButton);
+        this.canvas.insertAdjacentElement('afterend', this.userInterface);
+
+        const interfaceStyles = `
+            width: ${this.width}px;
+            height: ${this.height}px;
+            border: 3px solid black;
+            border-left: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: silver;
+        `;
+        const endTurnButtonStyles = `
+            width: 100px;
+            height: 100px;
+            border: 3px solid red;
+            border-radius: 50%;
+        `;
+
+        this.userInterface.style = interfaceStyles;
+        this.endTurnButton.style = endTurnButtonStyles;
+        game.interface.endTurnButton.style.backgroundColor = game.players[game.currentPlayer].color;
+        this.endTurnButton.addEventListener('click', game.endTurnHandle.bind(game));
     }
 }
 
@@ -109,16 +359,37 @@ class Game {
         this.mapHeight = settings.mapHeight;
         this.tileSide = settings.tileSide;
 
-        this.map = new Map(this.mapWidth, this.mapHeight);
-        this.camera = new Camera();
-        this.players = [];
-
         canvas.setAttribute('width', this.gameWidth);
         canvas.setAttribute('height', this.gameHeight);
+
+        this.map = new Map(this.mapWidth, this.mapHeight);
+        this.camera = new Camera();
+        this.interface = new Interface({width: 200, canvas: canvas});
+
+        this.players = [];
+        this.currentPlayer; //number
         this.currentParty;
     };
 
+    addPlayer (settings) {
+        settings.id = this.players.length;
+        this.players.push(new Player(settings));
+    }
+
+    synchroniseMap () {
+        this.players.forEach((player)=>{
+            player.parties.forEach((party)=>{
+                if (this.map.tiles[party.x][party.y].party === null) {
+                    console.log('Added party at %s / %s', party.x, party.y);
+                    this.map.tiles[party.x][party.y].party = party;
+                }
+
+            });
+        });
+    }
+
     draw () {
+        this.synchroniseMap ();
         ctx.clearRect(0, 0, this.gameWidth, this.gameHeight);
         for (let x = this.camera.x; x < this.camera.x + Math.floor(this.gameWidth / this.tileSide); x++) {
             for (let y = this.camera.y; y < this.camera.y + Math.floor(this.gameHeight / this.tileSide); y++) {
@@ -135,14 +406,14 @@ class Game {
                     ctx.stroke();
                 if (this.map.tiles[x][y].party !== null) {
                     ctx.beginPath();
-                    ctx.fillStyle= 'red';
+                    ctx.fillStyle = this.players[this.map.tiles[x][y].party.player].color;
                     ctx.arc((x - this.camera.x) * this.tileSide + Math.floor(this.tileSide / 2), (y - this.camera.y) * this.tileSide + Math.floor(this.tileSide / 2), Math.floor(this.tileSide / 2), 0, 2*Math.PI);
                     ctx.fill();
                 }
 
             }
         }
-        if (this.currentParty !== null && this.currentParty.path !== null) {
+        if (this.currentParty !== null && this.currentParty.path.length > 0) {
             ctx.fillStyle= 'lime';
             this.currentParty.path.forEach((point) => {
                 ctx.beginPath();
@@ -192,66 +463,93 @@ class Game {
         let previousX = this.currentParty.x;
         let previousY = this.currentParty.y;
 
-        if (this.currentParty.path === null) {
-            this.currentParty.path = this.map.getPath(previousX, previousY, x, y);
+        if (this.map.tiles[x][y].party !== null && this.map.tiles[x][y].party.player === this.currentPlayer) {
+            this.currentParty = this.map.tiles[x][y].party;
+        }
+        else if (this.currentParty.path.length === 0) {
+            // this.currentParty.path = this.map.getPath(previousX, previousY, x, y);
+            this.currentParty.path = this.map.dijkstra(this.map.getGraph(previousX, previousY, x, y));
+        }
+        else if (this.map.moveInterval !== null) {
+            clearInterval(this.map.moveInterval);
+            this.map.moveInterval = null;
         }
         else if (this.currentParty.path[this.currentParty.path.length-1].x === x && this.currentParty.path[this.currentParty.path.length-1].y === y){
             this.map.moveParty(this.currentParty, this.currentParty.path)
-            this.currentParty.path = null;
-            /*
-            this.map.tiles[previousX][previousY].party = null;
-            this.map.tiles[x][y].party = this.currentParty;
-            this.players[0].parties[0].x = x;
-            this.players[0].parties[0].y = y;
-            let step = 0;*/
-            /*const interval = setInterval (()=>{
-                this.players[0].parties[0].x = this.currentParty.path[step].x;
-                this.players[0].parties[0].y = this.currentParty.path[step].y;
-                this.map.tiles[previousX][previousY].party = null;
-                this.map.tiles[x][y].party = this.currentParty;
-                step++;
-                if (step >= this.currentParty.path.length - 1) {
-                    clearInterval(interval);
-                }
-            },200);*/
         }
         else {
-            this.currentParty.path = this.map.getPath(previousX, previousY, x, y);
+            // this.currentParty.path = this.map.getPath(previousX, previousY, x, y);
+            this.currentParty.path = this.map.dijkstra(this.map.getGraph(previousX, previousY, x, y));
         }
-
-
         this.draw();
     }
 
-    gameMapClickWhileMovingHandle (event) {
-        console.log('ololo');
-        this.stop = true;
+    endTurnHandle (event) {
+        if (this.map.moveInterval !== null) {
+            return;
+        }
+        this.currentPlayer = (this.currentPlayer < this.players.length - 1) ? this.currentPlayer + 1 : 0;
+        this.currentParty = this.players[this.currentPlayer].parties.length > 0 ? this.players[this.currentPlayer].parties[0] : null;
+        this.players[this.currentPlayer].startNewTurn();
+        game.draw();
     }
+
 }
 
 
 const game = new Game({
     gameWidth: 1200,
     gameHeight: 800,
-    mapWidth: 80,
-    mapHeight: 60,
+    mapWidth: 32,
+    mapHeight: 32,
     tileSide: 50
 });
 
-game.players.push(new Player({
+game.addPlayer({
     name: 'Pawel',
     color: 'purple'
-}));
+});
 
-game.players[0].parties.push(new Party({
+game.addPlayer({
+    name: 'Michal',
+    color: 'pink'
+});
+
+
+game.players[0].addParty({
     name: 'Kurwa',
     x: 3,
     y: 5,
-    maxMovePoints: 200
-}));
+    maxMovePoints: 500
+});
+
+game.players[0].addParty({
+    name: 'Szmata',
+    x: 5,
+    y: 7,
+    maxMovePoints: 500
+});
+
+game.players[1].addParty({
+    name: 'Chuj',
+    x: 9,
+    y: 9,
+    maxMovePoints: 500
+});
+
+game.players[1].addParty({
+    name: 'Dupa',
+    x: 8,
+    y: 6,
+    maxMovePoints: 500
+});
 
 game.currentParty = game.players[0].parties[0];
-game.map.tiles[3][5].party = (game.players[0].parties[0]);
+// game.map.tiles[3][5].party = (game.players[0].parties[0]);
+
+// game.map.tiles[5][7].party = (game.players[0].parties[1]);
+game.currentPlayer = 0;
+game.interface.attachMapInterface();
 
 game.draw();
 
@@ -260,3 +558,11 @@ document.addEventListener('DOMContentLoaded', ()=> {
 
     canvas.addEventListener('click', game.gameMapClickHandle.bind(game));
 });
+
+/*
+TODO
+Przemieszczanie na mapie:
+    *Czerwona ścieżka dla części, gdzie nie starczy punktów ruchu
+    *Algorytm wyznaczania ścieżki uwzględniający przeszkody i różne koszty poszczególnych pól
+
+*/
