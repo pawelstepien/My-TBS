@@ -7,7 +7,7 @@ class Tile {
         this.surface = Math.random() > 0.6 ? 'sand' : 'snow';
         this.building = null;
         this.party = null;
-        this.cost = this.surface === 'sand' ? 100 : 1;
+        this.cost = this.surface === 'sand' ? 200 : 50;
     };
 }
 
@@ -84,56 +84,56 @@ class Map {
                     xModifier = 0;
                     yModifier = -1;
                     propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
-                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].cost;
+                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].party !== null && this.tiles[x + xModifier][y + yModifier].party.player === game.currentPlayer ? Infinity : this.tiles[x + xModifier][y + yModifier].cost;
                 }
                 //North east
                 if (y > 0 && x < this.width - 1) {
                     xModifier = 1;
                     yModifier = -1;
                     propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
-                    node[propertyName] = parseFloat(Math.sqrt(2 * Math.pow(this.tiles[x + xModifier][y + yModifier].cost, 2)).toFixed(3));
+                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].party !== null && this.tiles[x + xModifier][y + yModifier].party.player === game.currentPlayer  ? Infinity : parseFloat(Math.sqrt(2 * Math.pow(this.tiles[x + xModifier][y + yModifier].cost, 2)).toFixed(3));
                 }
                 //East
                 if (x < this.width - 1) {
                     xModifier = 1;
                     yModifier = 0;
                     propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
-                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].cost;
+                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].party !== null && this.tiles[x + xModifier][y + yModifier].party.player === game.currentPlayer  ? Infinity : this.tiles[x + xModifier][y + yModifier].cost;
                 }
                 //South east
                 if (y < this.height - 1 && x < this.width - 1) {
                     xModifier = 1;
                     yModifier = 1;
                     propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
-                    node[propertyName] = parseFloat(Math.sqrt(2 * Math.pow(this.tiles[x + xModifier][y + yModifier].cost, 2)).toFixed(3));
+                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].party !== null && this.tiles[x + xModifier][y + yModifier].party.player === game.currentPlayer  ? Infinity : parseFloat(Math.sqrt(2 * Math.pow(this.tiles[x + xModifier][y + yModifier].cost, 2)).toFixed(3));
                 }
                 //South
                 if (y < this.height - 1) {
                     xModifier = 0;
                     yModifier = 1;
                     propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
-                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].cost
+                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].party !== null && this.tiles[x + xModifier][y + yModifier].party.player === game.currentPlayer  ? Infinity : this.tiles[x + xModifier][y + yModifier].cost
                 }
                 //South west
                 if (y < this.height - 1 && x > 0) {
                     xModifier = -1;
                     yModifier = 1;
                     propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
-                    node[propertyName] = parseFloat(Math.sqrt(2 * Math.pow(this.tiles[x + xModifier][y + yModifier].cost, 2)).toFixed(3));
+                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].party !== null && this.tiles[x + xModifier][y + yModifier].party.player === game.currentPlayer  ? Infinity : parseFloat(Math.sqrt(2 * Math.pow(this.tiles[x + xModifier][y + yModifier].cost, 2)).toFixed(3));
                 }
                 //West
                 if (x > 0) {
                     xModifier = -1;
                     yModifier = 0;
                     propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
-                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].cost
+                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].party !== null && this.tiles[x + xModifier][y + yModifier].party.player === game.currentPlayer  ? Infinity : this.tiles[x + xModifier][y + yModifier].cost
                 }
                 //North west
                 if (x > 0 && y > 0) {
                     xModifier = -1;
                     yModifier = -1;
                     propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
-                    node[propertyName] = parseFloat(Math.sqrt(2 * Math.pow(this.tiles[x + xModifier][y + yModifier].cost, 2)).toFixed(3));
+                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].party !== null && this.tiles[x + xModifier][y + yModifier].party.player === game.currentPlayer  ? Infinity : parseFloat(Math.sqrt(2 * Math.pow(this.tiles[x + xModifier][y + yModifier].cost, 2)).toFixed(3));
                 }
                 graph[x + '/' + y] = node;
             }
@@ -159,7 +159,6 @@ class Map {
           }, null);
     };
     // function that returns the minimum cost and path to reach Finish
-    /* TODO Ostatni element drogi, nie ma jak zdobyć jego koordynatów*/
   dijkstra (graph) {
       const startTime = new Date();
   // track lowest cost to reach each node
@@ -177,11 +176,9 @@ class Map {
 
   while (node) {
     let cost = costs[node];
-    // console.log('costs[node]', costs[node]);
     let children = graph[node];
     for (let n in children) {
         let newCost = cost + children[n];
-        // console.log('costs[n] b', costs[n]);
         if (!costs[n]) {
           costs[n] = newCost;
           parents[n] = node;
@@ -190,24 +187,21 @@ class Map {
           costs[n] = newCost;
           parents[n] = node;
         }
-        // console.log('costs[n] a', costs[n]);
     }
     processed.push(node);
     node = this.lowestCostNode(costs, processed);
-    // console.log('node', node);
   }
 
   let optimalPath = ['finish'];
   let parent = parents.finish;
   while (parent) {
 
-      // console.log('parent', parent);
       optimalPath.push(parent);
       parent = parents[parent];
   }
   optimalPath.reverse();
   const pathStart = optimalPath[0];
-  // optimalPath.shift();
+
   game.currentParty.path = optimalPath.map((step, index, array)=>{
       let x;
       let y;
@@ -229,7 +223,6 @@ class Map {
                   cost: graph[array[index-1]][array[index]]};
   });
   game.currentParty.path.shift();
-  console.log(game.currentParty.path);
   game.draw();
   const results = {
     distance: costs.finish,
@@ -253,32 +246,24 @@ class Camera {
         let tilesY = Math.floor(game.gameHeight / game.tileSide);
 
         if (x - Math.floor(tilesX * 0.5) >= 0 && x + Math.floor(tilesX * 0.5) < game.map.width) {
-            console.log('if x');
             game.camera.x = x - tilesX*0.5 + 1;
         }
         else if (x - Math.floor(tilesX * 0.5) <= 0) {
             game.camera.x = 0;
-            console.log('else x');
         }
         else if (x - Math.floor(tilesX * 0.5) >= game.map.width - tilesX) {
-            console.log('drugi else x');
             game.camera.x = game.map.width - tilesX;
         }
-        console.log('x: $s', game.camera.x);
 
         if (y - Math.floor(tilesY * 0.5) >= 0 && y + Math.floor(tilesY * 0.5) < game.map.height) {
-            console.log('if y');
             game.camera.y = y - Math.floor(tilesY * 0.5) + 1;
         }
         else if (y - Math.floor(tilesY * 0.5) <= 0) {
             game.camera.y = 0;
-            console.log('else y');
         }
         else if (y - Math.floor(tilesY * 0.5) >= tilesY) {
-            console.log('drugi else y');
             game.camera.y = game.map.height - tilesY;
         }
-        console.log('y: $s', game.camera.y);
     }
 }
 
@@ -424,8 +409,11 @@ class Game {
             }
         }
         if (this.currentParty !== null && this.currentParty.path.length > 0) {
-            ctx.fillStyle= 'lime';
+            let pointsLeft = this.currentParty.movePoints;
+
             this.currentParty.path.forEach((point) => {
+                pointsLeft -= point.cost;
+                ctx.fillStyle= pointsLeft > 0 ? 'lime' : 'red';
                 ctx.beginPath();
                 ctx.arc((point.x - this.camera.x) * this.tileSide + Math.floor(this.tileSide / 2), (point.y - this.camera.y) * this.tileSide + Math.floor(this.tileSide / 2), Math.floor(this.tileSide / 2), 0, 2*Math.PI);
                 ctx.fill()
@@ -580,7 +568,4 @@ document.addEventListener('DOMContentLoaded', ()=> {
 /*
 TODO
 Przemieszczanie na mapie:
-    *Czerwona ścieżka dla części, gdzie nie starczy punktów ruchu
-    *Algorytm wyznaczania ścieżki uwzględniający przeszkody i różne koszty poszczególnych pól
-
-*/
+    /* Optymalizacja grafu dla dużych map */
