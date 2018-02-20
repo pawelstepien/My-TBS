@@ -55,6 +55,9 @@ class Map {
                 party.movePoints -= path[0].cost;
                 path.shift();
                 console.log(party.movePoints);
+                if (game.camera.follow) {
+                    game.camera.center(party.x, party.y);
+                }
                 game.draw();
                 return;
             } else {
@@ -243,6 +246,39 @@ class Camera {
     constructor (settings) {
         this.x = 0;
         this.y = 0;
+        this.follow = true;
+    }
+    center (x, y) {
+        let tilesX = Math.floor(game.gameWidth / game.tileSide);
+        let tilesY = Math.floor(game.gameHeight / game.tileSide);
+
+        if (x - Math.floor(tilesX * 0.5) >= 0 && x + Math.floor(tilesX * 0.5) < game.map.width) {
+            console.log('if x');
+            game.camera.x = x - tilesX*0.5 + 1;
+        }
+        else if (x - Math.floor(tilesX * 0.5) <= 0) {
+            game.camera.x = 0;
+            console.log('else x');
+        }
+        else if (x - Math.floor(tilesX * 0.5) >= game.map.width - tilesX) {
+            console.log('drugi else x');
+            game.camera.x = game.map.width - tilesX;
+        }
+        console.log('x: $s', game.camera.x);
+
+        if (y - Math.floor(tilesY * 0.5) >= 0 && y + Math.floor(tilesY * 0.5) < game.map.height) {
+            console.log('if y');
+            game.camera.y = y - Math.floor(tilesY * 0.5) + 1;
+        }
+        else if (y - Math.floor(tilesY * 0.5) <= 0) {
+            game.camera.y = 0;
+            console.log('else y');
+        }
+        else if (y - Math.floor(tilesY * 0.5) >= tilesY) {
+            console.log('drugi else y');
+            game.camera.y = game.map.height - tilesY;
+        }
+        console.log('y: $s', game.camera.y);
     }
 }
 
@@ -267,34 +303,8 @@ class Player {
         let tilesX = Math.floor(game.gameWidth / game.tileSide);
         let tilesY = Math.floor(game.gameHeight / game.tileSide);
         //Do poprawy
+        game.camera.center(game.currentParty.x, game.currentParty.y);
 
-        if (game.currentParty.x - Math.floor(tilesX * 0.5) >= 0 && game.currentParty.x + Math.floor(tilesX * 0.5) < game.map.width) {
-            console.log('if x');
-            game.camera.x = game.currentParty.x - tilesX*0.5 + 1;
-        }
-        else if (game.currentParty.x - Math.floor(tilesX * 0.5) <= 0) {
-            game.camera.x = 0;
-            console.log('else x');
-        }
-        else if (game.currentParty.x - Math.floor(tilesX * 0.5) >= game.map.width - tilesX) {
-            console.log('drugi else x');
-            game.camera.x = game.map.width - tilesX;
-        }
-        console.log('x: $s', game.camera.x);
-
-        if (game.currentParty.y - Math.floor(tilesY * 0.5) >= 0 && game.currentParty.y + Math.floor(tilesY * 0.5) < game.map.height) {
-            console.log('if y');
-            game.camera.y = game.currentParty.y - Math.floor(tilesY * 0.5) + 1;
-        }
-        else if (game.currentParty.y - Math.floor(tilesY * 0.5) <= 0) {
-            game.camera.y = 0;
-            console.log('else y');
-        }
-        else if (game.currentParty.y - Math.floor(tilesY * 0.5) >= tilesY) {
-            console.log('drugi else y');
-            game.camera.y = game.map.height - tilesY;
-        }
-        console.log('y: $s', game.camera.y);
     }
 }
 
@@ -552,6 +562,14 @@ game.currentPlayer = 0;
 game.interface.attachMapInterface();
 
 game.draw();
+//
+// drawHex (x, y, side) => {
+//     ctx.beginPath();
+//     ctx.moveTo(x, y);
+//     ctx.strokeStyle = 'black';
+//
+// };
+
 
 document.addEventListener('DOMContentLoaded', ()=> {
     window.addEventListener('keydown', game.gameMapArrowHandle.bind(game));
