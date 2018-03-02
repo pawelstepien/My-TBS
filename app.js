@@ -7,7 +7,7 @@ class Tile {
         this.surface = Math.random() > 0.6 ? 'sand' : 'snow';
         this.building = null;
         this.party = null;
-        this.cost = this.surface === 'sand' ? 200 : 50;
+        this.cost = this.surface === 'sand' ? 200 : 15;
     };
 }
 
@@ -48,6 +48,13 @@ class Map {
     moveParty (party, path) {
         this.moveInterval = setInterval(()=>{
             if (path.length > 0 && party.movePoints >= path[0].cost) {
+                //Do zamiany na przyjaznych graczy);
+                if (this.tiles[path[0].x][path[0].y].party !== null && this.tiles[path[0].x][path[0].y].party.player !== game.currentPlayer) {
+                    console.log('FIGTH!');
+                    clearInterval(this.moveInterval);
+                    this.moveInterval = null;
+                    return;
+                }
                 this.tiles[party.x][party.y].party = null;
                 party.x = path[0].x;
                 party.y = path[0].y;
@@ -69,71 +76,38 @@ class Map {
         }, 150);
     }
 
+
+    getRelativeTile(x, y, xVector, yVector) {
+        let result = {x: x + xVector, y: y + yVector};
+        if (result.x < 0 || result.x >= this.width || result.y < 0 || result.y >= this.width) {
+            return null;
+        }
+        return {x: x + xVector, y: y + yVector};
+    }
+
+
     getGraph (startX, startY, finishX, finishY) {
-        console.log(this);
         const graph = {};
+
         for (let x = 0; x < this.width; x++) {
             for (let y = 0; y < this.height; y++) {
                 let xModifier;
                 let yModifier;
                 let propertyName;
                 let node = {};
-                //All map tiles
-                //North
-                if (y > 0) {
-                    xModifier = 0;
-                    yModifier = -1;
-                    propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
-                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].party !== null && this.tiles[x + xModifier][y + yModifier].party.player === game.currentPlayer ? Infinity : this.tiles[x + xModifier][y + yModifier].cost;
-                }
-                //North east
-                if (y > 0 && x < this.width - 1) {
-                    xModifier = 1;
-                    yModifier = -1;
-                    propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
-                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].party !== null && this.tiles[x + xModifier][y + yModifier].party.player === game.currentPlayer  ? Infinity : parseFloat(Math.sqrt(2 * Math.pow(this.tiles[x + xModifier][y + yModifier].cost, 2)).toFixed(3));
-                }
-                //East
-                if (x < this.width - 1) {
-                    xModifier = 1;
-                    yModifier = 0;
-                    propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
-                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].party !== null && this.tiles[x + xModifier][y + yModifier].party.player === game.currentPlayer  ? Infinity : this.tiles[x + xModifier][y + yModifier].cost;
-                }
-                //South east
-                if (y < this.height - 1 && x < this.width - 1) {
-                    xModifier = 1;
-                    yModifier = 1;
-                    propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
-                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].party !== null && this.tiles[x + xModifier][y + yModifier].party.player === game.currentPlayer  ? Infinity : parseFloat(Math.sqrt(2 * Math.pow(this.tiles[x + xModifier][y + yModifier].cost, 2)).toFixed(3));
-                }
-                //South
-                if (y < this.height - 1) {
-                    xModifier = 0;
-                    yModifier = 1;
-                    propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
-                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].party !== null && this.tiles[x + xModifier][y + yModifier].party.player === game.currentPlayer  ? Infinity : this.tiles[x + xModifier][y + yModifier].cost
-                }
-                //South west
-                if (y < this.height - 1 && x > 0) {
-                    xModifier = -1;
-                    yModifier = 1;
-                    propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
-                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].party !== null && this.tiles[x + xModifier][y + yModifier].party.player === game.currentPlayer  ? Infinity : parseFloat(Math.sqrt(2 * Math.pow(this.tiles[x + xModifier][y + yModifier].cost, 2)).toFixed(3));
-                }
-                //West
-                if (x > 0) {
-                    xModifier = -1;
-                    yModifier = 0;
-                    propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
-                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].party !== null && this.tiles[x + xModifier][y + yModifier].party.player === game.currentPlayer  ? Infinity : this.tiles[x + xModifier][y + yModifier].cost
-                }
-                //North west
-                if (x > 0 && y > 0) {
-                    xModifier = -1;
-                    yModifier = -1;
-                    propertyName = x + xModifier === finishX && y + yModifier === finishY ? 'finish' : (x + xModifier) + '/' + (y + yModifier);
-                    node[propertyName] = this.tiles[x + xModifier][y + yModifier].party !== null && this.tiles[x + xModifier][y + yModifier].party.player === game.currentPlayer  ? Infinity : parseFloat(Math.sqrt(2 * Math.pow(this.tiles[x + xModifier][y + yModifier].cost, 2)).toFixed(3));
+
+                //getAllAdjacentTiles
+                for (let i = -1; i <= 1; i++) {
+                    for (var j = -1; j <= 1; j++) {
+                        let result = this.getRelativeTile(x, y, i, j);
+                        if (result !== null) {
+                            propertyName = result.x === finishX && result.y === finishY ? 'finish' : result.x + '/' + result.y;
+                            node[propertyName] = this.tiles[result.x][result.y].party !== null && this.tiles[result.x][result.y].party.player === game.currentPlayer ?
+                            Infinity : Math.abs(i) + Math.abs(j) === 1 ?
+                            this.tiles[result.x][result.y].cost :
+                            Math.sqrt(2 * Math.pow(this.tiles[result.x][result.y].cost, 2));
+                        }
+                    }
                 }
                 graph[x + '/' + y] = node;
             }
@@ -293,6 +267,52 @@ class Player {
     }
 }
 
+class Unit {
+    constructor (settings) {
+        this.attributes = settings.attributes;
+        this.hp;
+        this.mp;
+        this.ap;
+        this.calculateStats();
+        this.eq = {
+            armor :null,
+            leftHand: null,
+            rightHand: null,
+            bag: null
+        }
+    }
+    calculateStats () {
+        this.hp = this.attributes.endurance * 2;
+        this.mp = this.attributes.willPower * 2;
+        this.ap = this.attributes.dexterity * 2;
+    }
+    calculateAttributes () {
+        
+    }
+    putOnItem (item) {
+        if (this.eq[item.placement] !== null) {
+            this.eq.bag = this.eq[item.placement];
+        }
+        this.eq[item.placement] = item;
+        this.calculateAttributes();
+        this.calculateStats();
+    }
+}
+
+class Item {
+    constructor (settings) {
+        this.name = settings.name;
+        this.placement = settings.placement;
+        this.modifiers = settings.modifiers;
+    }
+}
+
+class Hero extends Unit {
+    constructor(settings) {
+
+    }
+}
+
 class Party {
     constructor (settings) {
         this.name = settings.name;
@@ -302,6 +322,15 @@ class Party {
         this.maxMovePoints = settings.maxMovePoints;
         this.movePoints = this.maxMovePoints;
         this.player;
+        this.members = [];
+        this.membersCap = typeof settings.membersCap === 'number' ? settings.membersCap : 6;
+    }
+    addUnit (settings) {
+        if (this.members.length < this.membersCap) {
+            this.members.push(new Unit(settings));
+            return true;
+        }
+        return false;
     }
 }
 
@@ -353,6 +382,12 @@ class Game {
         this.mapWidth = settings.mapWidth;
         this.mapHeight = settings.mapHeight;
         this.tileSide = settings.tileSide;
+        this.textures = {
+            grass: new Image(this.tileSide, this.tileSide),
+            stones: new Image(this.tileSide, this.tileSide)
+        };
+        this.textures.grass.src = './Sprites/grass.png';
+        this.textures.stones.src = './Sprites/stones.png'
 
         canvas.setAttribute('width', this.gameWidth);
         canvas.setAttribute('height', this.gameHeight);
@@ -388,17 +423,21 @@ class Game {
         ctx.clearRect(0, 0, this.gameWidth, this.gameHeight);
         for (let x = this.camera.x; x < this.camera.x + Math.floor(this.gameWidth / this.tileSide); x++) {
             for (let y = this.camera.y; y < this.camera.y + Math.floor(this.gameHeight / this.tileSide); y++) {
+                let texture = null;
                 ctx.strokeStyle = 'black';
                 ctx.beginPath();
                 if (this.map.tiles[x][y].surface === 'sand') {
-                    ctx.fillStyle= 'yellow';
+                    // ctx.fillStyle= 'yellow';
+                    texture = this.textures.stones;
                 }
                 else {
-                    ctx.fillStyle= 'black';
+                    // ctx.fillStyle= 'black';
+                    texture = this.textures.grass;
                 }
-                    ctx.rect((x - this.camera.x) * this.tileSide, (y - this.camera.y) * this.tileSide, this.tileSide, this.tileSide);
-                    ctx.fill();
-                    ctx.stroke();
+                 ctx.drawImage(texture, (x - this.camera.x) * this.tileSide, (y - this.camera.y) * this.tileSide);
+                    // ctx.rect((x - this.camera.x) * this.tileSide, (y - this.camera.y) * this.tileSide, this.tileSide, this.tileSide);
+                    // ctx.fill();
+                    // ctx.stroke();
                 if (this.map.tiles[x][y].party !== null) {
                     ctx.beginPath();
                     ctx.fillStyle = this.players[this.map.tiles[x][y].party.player].color;
@@ -454,6 +493,7 @@ class Game {
         this.draw();
     }
 
+
     gameMapClickHandle (event) {
         let x = this.camera.x + Math.floor(event.offsetX / game.tileSide);
         let y = this.camera.y + Math.floor(event.offsetY / game.tileSide);
@@ -496,11 +536,11 @@ class Game {
 
 
 const game = new Game({
-    gameWidth: 1200,
-    gameHeight: 800,
+    gameWidth: 1400,
+    gameHeight: 900,
     mapWidth: 32,
     mapHeight: 32,
-    tileSide: 50
+    tileSide: 100
 });
 
 game.addPlayer({
@@ -549,7 +589,9 @@ game.currentParty = game.players[0].parties[0];
 game.currentPlayer = 0;
 game.interface.attachMapInterface();
 
-game.draw();
+setTimeout(game.draw.bind(game), 1);
+
+// game.draw();
 //
 // drawHex (x, y, side) => {
 //     ctx.beginPath();
@@ -557,7 +599,10 @@ game.draw();
 //     ctx.strokeStyle = 'black';
 //
 // };
-
+const itemsList = [];
+itemsList.push(new Item ({name: 'Shield of endurance',
+                          modifiers: {endurance: (endurance)=>{return Math.floor(endurance*1.2);}},
+                          placement: 'leftHand'}));
 
 document.addEventListener('DOMContentLoaded', ()=> {
     window.addEventListener('keydown', game.gameMapArrowHandle.bind(game));
