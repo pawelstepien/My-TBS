@@ -287,15 +287,26 @@ class Unit {
         this.ap = this.attributes.dexterity * 2;
     }
     calculateAttributes () {
-        
+        for (let item in this.eq) {
+            if (item === 'bag') {
+                continue;
+            }
+            if (this.eq[item] !== null && this.eq[item] !== undefined) {
+                for(let stat in this.eq[item].modifiers) {
+                    if (this[stat] !== undefined && this[stat] !== null) {
+                        this[stat] = this.eq[item].modifiers[stat](this[stat]);
+                    }
+                }
+            }
+        }
     }
     putOnItem (item) {
         if (this.eq[item.placement] !== null) {
             this.eq.bag = this.eq[item.placement];
         }
         this.eq[item.placement] = item;
-        this.calculateAttributes();
         this.calculateStats();
+        this.calculateAttributes();
     }
 }
 
@@ -533,6 +544,39 @@ class Game {
     }
 
 }
+/* Do pola bitwy */
+function drawHexagon(x, y, fill) {
+        var fill = fill || false;
+
+        var hexHeight,
+        hexRadius,
+        hexRectangleHeight,
+        hexRectangleWidth,
+        hexagonAngle = 0.523598776, // 30 degrees in radians
+        sideLength = 36,
+        boardWidth = 10,
+        boardHeight = 10;
+
+        hexHeight = Math.sin(hexagonAngle) * sideLength;
+        hexRadius = Math.cos(hexagonAngle) * sideLength;
+        hexRectangleHeight = sideLength + 2 * hexHeight;
+        hexRectangleWidth = 2 * hexRadius;
+
+        ctx.beginPath();
+        ctx.moveTo(x + hexRadius, y);
+        ctx.lineTo(x + hexRectangleWidth, y + hexHeight);
+        ctx.lineTo(x + hexRectangleWidth, y + hexHeight + sideLength);
+        ctx.lineTo(x + hexRadius, y + hexRectangleHeight);
+        ctx.lineTo(x, y + sideLength + hexHeight);
+        ctx.lineTo(x, y + hexHeight);
+        ctx.closePath();
+
+        if(fill) {
+            ctx.fill();
+        } else {
+            ctx.stroke();
+        }
+    }
 
 
 const game = new Game({
@@ -555,32 +599,34 @@ game.addPlayer({
 
 
 game.players[0].addParty({
-    name: 'Kurwa',
+    name: 'Andrzej',
     x: 3,
     y: 5,
     maxMovePoints: 500
 });
 
 game.players[0].addParty({
-    name: 'Szmata',
+    name: 'Jerzy',
     x: 5,
     y: 7,
     maxMovePoints: 500
 });
 
 game.players[1].addParty({
-    name: 'Chuj',
+    name: 'Grzegorz',
     x: 9,
     y: 9,
     maxMovePoints: 500
 });
 
 game.players[1].addParty({
-    name: 'Dupa',
+    name: 'Antoni',
     x: 8,
     y: 6,
     maxMovePoints: 500
 });
+
+
 
 game.currentParty = game.players[0].parties[0];
 // game.map.tiles[3][5].party = (game.players[0].parties[0]);
@@ -601,7 +647,16 @@ setTimeout(game.draw.bind(game), 1);
 // };
 const itemsList = [];
 itemsList.push(new Item ({name: 'Shield of endurance',
-                          modifiers: {endurance: (endurance)=>{return Math.floor(endurance*1.2);}},
+                          modifiers: {
+                              hp: (hp)=>{return hp+20;}
+                          },
+                          placement: 'leftHand'}));
+
+itemsList.push(new Item ({name: 'Shield of dexterity',
+                          modifiers: {
+                            hp: (hp)=>{return hp+10;},
+                            ap: (ap)=>{return ap+15;}
+                          },
                           placement: 'leftHand'}));
 
 document.addEventListener('DOMContentLoaded', ()=> {
@@ -610,6 +665,8 @@ document.addEventListener('DOMContentLoaded', ()=> {
     canvas.addEventListener('click', game.gameMapClickHandle.bind(game));
 });
 
+game.currentParty.addUnit({attributes:{endurance:10, willPower: 10, dexterity:10}});
+game.currentParty.members[0].putOnItem(itemsList[0]);
 /*
 TODO
 Przemieszczanie na mapie:
