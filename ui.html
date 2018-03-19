@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+    <style>
+        *{
+            padding: 0;
+            margin: 0;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100vw;
+            height: 100vh;
+        }
+        .grid {
+            width: 45vw;
+            height: 80vh;
+            max-width: 420px;
+            max-height: 620px;
+            background-color: silver;
+            border: 3px solid #000;
+            border-radius: 5px;
+            padding: 5px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        @media screen and (max-width: 640) {
+
+        }
+        .row {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+        .box {
+            /* box-sizing: border-box; */
+            width: 45%;
+            /* border: 3px solid black; */
+            box-shadow: 0 0 3px 3px #000;
+            margin: 5px;
+        }
+        .item {
+            width: 100%;
+            height: 100%;
+        }
+        </style>
+</head>
+<body>
+    <div class="container">
+        <div class="grid">
+            <div class="row">
+                <div class="box">
+                </div>
+                <div class="box">
+                </div>
+            </div>
+            <div class="row">
+                <div class="box">
+                </div>
+                <div class="box">
+                </div>
+            </div><div class="row">
+                <div class="box">
+                </div>
+                <div class="box">
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="row">
+                <div class="box">
+                </div>
+                <div class="box">
+                </div>
+            </div>
+            <div class="row">
+                <div class="box">
+                </div>
+                <div class="box">
+                </div>
+            </div><div class="row">
+                <div class="box">
+                </div>
+                <div class="box">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            var dragged;
+            document.querySelectorAll('.box').forEach((box) => {
+                box.addEventListener('drop', (event) => {
+                    event.preventDefault();
+                    let droppedOn = event.target.cloneNode();
+                    event.target.closest('.box').style = 'box-shadow: 0 0 3px 3px #000;';
+                    if (droppedOn.className !== 'box') {
+                        dragged.closest('.box').appendChild(droppedOn);
+                        event.target.closest('.box').appendChild(dragged);
+                        event.target.closest('.box').removeChild(event.target);
+                    } else {
+                        event.target.closest('.box').appendChild(dragged);
+                    }
+                });
+                box.addEventListener("dragover", (event) => {
+                    event.preventDefault();
+                }, false);
+                box.addEventListener('dragenter', (event) => {
+                    event.target.closest('.box').style = 'box-shadow: 0 0 3px 3px #FFF;';
+                });
+                box.addEventListener('dragleave', (event) => {
+                    console.log(event.srcElement.className === 'box');
+                    console.log(event);
+                    event.target.closest('.box').style = 'box-shadow: 0 0 3px 3px #000;';
+                });
+                if (Math.random() > 0.4) {
+                    box.insertAdjacentHTML('beforeend', '<article class="item" draggable="true"></article>');
+                }
+                let item = box.querySelector('.item');
+                if (item === null) {
+                    return;
+                }
+                item.setAttribute('style', `background-color: rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)});`);
+                item.addEventListener("dragstart", (event) => {
+                    dragged = event.target;
+                    event.dataTransfer.setData("text", event.target.id);
+                }, false);
+            });
+        });
+    </script>
+</body>
+</html>
