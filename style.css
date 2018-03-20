@@ -9,8 +9,47 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
 }
 
 #game {
     border: 3px solid black;
+}
+
+#party-window {
+    /* box-sizing: border-box; */
+    width: 800px;
+    height: 600px;
+    border: 3px solid black;
+    /* display: flex; */
+    position: absolute;
+    background: silver;
+    top: auto;
+    bottom: auto;
+    left: auto;
+    right: auto;
+}
+
+#party-window .party-name-wrapper{
+    text-align: center;
+    height: 30px;
+}
+#party-window .party-name{
+
+}
+
+#party-window .party-left-panel {
+    display: inline-block;
+    box-sizing: border-box;
+    border: 2px solid black;
+    width: 50%;
+    height: calc(100% - 30px);
+}
+
+#party-window .party-right-panel {
+    display: inline-block;
+    box-sizing: border-box;
+    border: 2px solid black;
+    width: 50%;
+    height: calc(100% - 30px);
 }

@@ -384,6 +384,29 @@ class Interface {
         game.interface.endTurnButton.style.backgroundColor = game.players[game.currentPlayer].color;
         this.endTurnButton.addEventListener('click', game.endTurnHandle.bind(game));
     }
+    openPartyWindow (secondParty) {
+        game.pauseListeners = true;
+        this.partyWindow = document.createElement('div');
+
+        this.partyWindow.id = 'party-window';
+        document.getElementById('container').appendChild(this.partyWindow);
+        this.partyWindow.innerHTML = `
+            <div class='party-name-wrapper'>
+                <h2 class='party-name'>${game.currentParty.name}</h2>
+            </div>
+            <div class='party-left-panel'></div>
+            <div class='party-right-panel'></div>
+
+        `
+    }
+
+    closePartyWindow () {
+        var partyWindow = document.getElementById('party-window');
+        if (partyWindow !== null) {
+            partyWindow.remove();
+        }
+        game.pauseListeners = false;
+    }
 }
 
 class Game {
@@ -410,6 +433,7 @@ class Game {
         this.players = [];
         this.currentPlayer; //number
         this.currentParty;
+        this.pauseListeners = false;
     };
 
     addPlayer (settings) {
@@ -473,6 +497,7 @@ class Game {
     }
 
     gameMapArrowHandle (event) {
+        if (game.pauseListeners) return;
         switch (event.key) {
             case 'ArrowUp':
                 event.preventDefault();
@@ -506,6 +531,12 @@ class Game {
 
 
     gameMapClickHandle (event) {
+        if (game.pauseListeners) {
+            if (document.getElementById('party-window') !== null) {
+                game.interface.closePartyWindow();
+            }
+            return;
+        }
         let x = this.camera.x + Math.floor(event.offsetX / game.tileSide);
         let y = this.camera.y + Math.floor(event.offsetY / game.tileSide);
 
@@ -513,7 +544,12 @@ class Game {
         let previousY = this.currentParty.y;
 
         if (this.map.tiles[x][y].party !== null && this.map.tiles[x][y].party.player === this.currentPlayer) {
-            this.currentParty = this.map.tiles[x][y].party;
+            if (this.map.tiles[x][y].party === this.currentParty) {
+                game.interface.openPartyWindow();
+            }
+            else {
+                this.currentParty = this.map.tiles[x][y].party;
+            }
         }
         else if (this.currentParty.path.length === 0) {
             // this.currentParty.path = this.map.getPath(previousX, previousY, x, y);
@@ -534,6 +570,7 @@ class Game {
     }
 
     endTurnHandle (event) {
+        if (game.pauseListeners) return;
         if (this.map.moveInterval !== null) {
             return;
         }
@@ -663,6 +700,7 @@ document.addEventListener('DOMContentLoaded', ()=> {
     window.addEventListener('keydown', game.gameMapArrowHandle.bind(game));
 
     canvas.addEventListener('click', game.gameMapClickHandle.bind(game));
+
 });
 
 game.currentParty.addUnit({attributes:{endurance:10, willPower: 10, dexterity:10}});
