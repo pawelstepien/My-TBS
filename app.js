@@ -269,6 +269,7 @@ class Player {
 
 class Unit {
     constructor (settings) {
+        this.name = settings.name;
         this.attributes = settings.attributes;
         this.hp;
         this.mp;
@@ -394,10 +395,19 @@ class Interface {
             <div class='party-name-wrapper'>
                 <h2 class='party-name'>${game.currentParty.name}</h2>
             </div>
-            <div class='party-left-panel'></div>
+            <div class='party-left-panel'>
+                <ul class="units-list"></ul>
+            </div>
             <div class='party-right-panel'></div>
-
-        `
+        `;
+        let unitsList = document.querySelector('#party-window .units-list');
+        unitsList.addEventListener('click', this.unitsListClickHandle);
+        unitsList.innerHTML = game.currentParty.members.map((unit, index) => {
+            return `
+                <li class="units-list-unit" data-index="${index}">
+                    <h3>${unit.name}</h3>
+                </li>`;
+            }).join('');
     }
 
     closePartyWindow () {
@@ -407,6 +417,11 @@ class Interface {
         }
         game.pauseListeners = false;
     }
+
+    unitsListClickHandle (event) {
+        console.log(event);
+    }
+
 }
 
 class Game {
@@ -703,8 +718,12 @@ document.addEventListener('DOMContentLoaded', ()=> {
 
 });
 
-game.currentParty.addUnit({attributes:{endurance:10, willPower: 10, dexterity:10}});
+game.currentParty.addUnit({name: 'Najlepsza jednostka na świecie', attributes:{endurance:10, willPower: 10, dexterity:10}});
 game.currentParty.members[0].putOnItem(itemsList[0]);
+
+game.currentParty.addUnit({name: 'Najgorsza jednostka na świecie', attributes:{endurance:5, willPower: 5, dexterity:55}});
+game.currentParty.members[0].putOnItem(itemsList[1]);
+
 /*
 TODO
 Przemieszczanie na mapie:

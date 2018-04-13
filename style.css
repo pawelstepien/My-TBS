@@ -38,15 +38,8 @@
 
 }
 
-#party-window .party-left-panel {
-    display: inline-block;
-    box-sizing: border-box;
-    border: 2px solid black;
-    width: 50%;
-    height: calc(100% - 30px);
-}
-
-#party-window .party-right-panel {
+#party-window .party-left-panel, #party-window .party-right-panel {
+    float: left;
     display: inline-block;
     box-sizing: border-box;
     border: 2px solid black;
