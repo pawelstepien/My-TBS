@@ -392,13 +392,31 @@ class Interface {
         this.partyWindow.id = 'party-window';
         document.getElementById('container').appendChild(this.partyWindow);
         this.partyWindow.innerHTML = `
-            <div class='party-name-wrapper'>
-                <h2 class='party-name'>${game.currentParty.name}</h2>
+            <div class="party-name-wrapper">
+                <h2 class="party-name">${game.currentParty.name}</h2>
             </div>
-            <div class='party-left-panel'>
+            <div class="party-left-panel">
                 <ul class="units-list"></ul>
             </div>
-            <div class='party-right-panel'></div>
+            <div class="party-right-panel">
+                <h2 class="unit-name"></h2>
+                <div class="unit-stats">
+                    <p class="unit-stats-hp"></p>
+                    <p class="unit-stats-mp"></p>
+                    <p class="unit-stats-ap"></p>
+                </div>
+                <div class="unit-attributes">
+                    <p class="unit-attributes-str"></p>
+                    <p class="unit-attributes-dex"></p>
+                    <p class="unit-attributes-wp"></p>
+                </div>
+                <div class="unit-eq">
+                    <p class="unit-eq-right"></p>
+                    <p class="unit-eq-left"></p>
+                    <p class="unit-eq-armor"></p>
+                    <p class="unit-eq-bag"></p>
+                </div>
+            </div>
         `;
         let unitsList = document.querySelector('#party-window .units-list');
         unitsList.addEventListener('click', this.unitsListClickHandle);
@@ -419,7 +437,28 @@ class Interface {
     }
 
     unitsListClickHandle (event) {
-        console.log(event);
+        let previousActive = document.querySelector('.active-unit');
+        let active = event.target.closest('li');
+        if (previousActive !== null) {
+            previousActive.classList.remove('active-unit');
+        }
+        active.classList.add('active-unit');
+        console.log(this);
+        game.interface.updateRightPanel(game.currentParty.members[active.dataset.index]);
+    }
+
+    updateRightPanel (unit) {
+        let panel = document.querySelector('.party-right-panel')
+        let nodes = {
+            name: panel.querySelector('.unit-name'),
+            hp: panel.querySelector('.unit-stats-hp'),
+            mp: panel.querySelector('.unit-stats-mp'),
+            ap: panel.querySelector('.unit-stats-ap'),
+            str: panel.querySelector('.unit-attributes-str'),
+            dex: panel.querySelector('.unit-attributes-dex'),
+            wp: panel.querySelector('.unit-attributes-wp'),
+        };
+        nodes.name.textContent = unit.name;
     }
 
 }

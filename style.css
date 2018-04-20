@@ -46,3 +46,12 @@
     width: 50%;
     height: calc(100% - 30px);
 }
+
+.units-list-unit {
+    list-style: none;
+    margin: 5px;
+}
+
+.active-unit {
+    color: red;
+}
