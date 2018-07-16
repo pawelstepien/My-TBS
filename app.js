@@ -507,6 +507,10 @@ class Game {
         });
     }
 
+    areAssetsLoaded () {
+        return !Object.values(this.textures).some(texture => !texture.complete);
+    }
+
     draw () {
         this.synchroniseMap ();
         ctx.clearRect(0, 0, this.gameWidth, this.gameHeight);
@@ -726,7 +730,14 @@ game.currentParty = game.players[0].parties[0];
 game.currentPlayer = 0;
 game.interface.attachMapInterface();
 
-setTimeout(game.draw.bind(game), 1);
+let assetsInterval = setInterval(() => {
+    if (game.areAssetsLoaded()) {
+        game.draw();
+        Object.values(game.textures).forEach(texture => console.log(texture.complete))
+        clearInterval(assetsInterval);
+    }
+}, 50);
+
 
 // game.draw();
 //
